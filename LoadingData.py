@@ -1,9 +1,9 @@
 #%%
-from turtle import ycor
+
 import numpy as np
 import pandas as pd
 from scipy.fftpack import rfftfreq
-from scipy.signal import butter,lfilter
+from scipy.signal import butter,filtfilt
 df = pd.read_csv("AALdata/sub-0001_faces.csv",sep=",",header=None)
 X = df.values
 
@@ -16,23 +16,21 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
     return b, a
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
+    y = filtfilt(b, a, data)
     return y
 
 #%%
-
-
-
-#%%
-
 import plotly.express as px
 
 fs = 3/4 # Hz
 
 lowcut = 0.01 # Hz
 highcut = 0.1 # Hz
-
-y_filter = butter_bandpass_filter(X[0],lowcut, highcut, fs, order=2)
+y =X[0]-np.mean(X[0])
+print(y[0])
+y[0] = y[0]/2
+print(y[0])
+y_filter = butter_bandpass_filter(y,lowcut, highcut, fs, order=5)
 
 fig=px.line(x=[i for i  in range(330)],y=X[0])
 fig.show()
@@ -71,7 +69,7 @@ fig.show()
 # fig3.show()
 
 
-from scipy.fft import rfft, irfft, rfftfreq
+from scipy.fft import rfft, irfft, rfftfreq, 
 
 Z = rfft(y)
 W = rfftfreq(2100,d=1/420)
