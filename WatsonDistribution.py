@@ -73,7 +73,8 @@ class WatsonDistribution:
         while True:
             M_add = self.Mj(a,c,k,j+1)
             
-            if (Mf - (Mf + M_add))  / Mf < 1e-10:
+            if (M_add)  / Mf < 1e-10:
+                print(f"M(a,c,j) Converged after j = {j} iterations")
                 break
             else:
                 Mf += M_add
@@ -85,7 +86,7 @@ class WatsonDistribution:
 #%%
 
 mu = np.array([1,0])
-k = 1
+k = 2
 p = 2
 
 
