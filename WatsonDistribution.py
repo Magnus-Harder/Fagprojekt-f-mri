@@ -38,14 +38,13 @@ px.line(x=x,y=y)
 
 #%%
 class WatsonDistribution:
-    def __init__(self,p,mu,k):
+    def __init__(self,p):
         self.p = p
-        self.mu = mu
-        self.k = k
 
 
-    def pdf(self,x,mu,k):
-        Wp = self.c(self.p,self.k) * np.exp(self.k * (self.mu.T @ x )**2)
+
+    def pdf(self,x,mu,kappa):
+        Wp = self.c(self.p,kappa) * np.exp(self.k * (mu.T @ x )**2)
         return Wp
 
     def log_likelihood(self,mu,k,X):
@@ -80,13 +79,35 @@ class WatsonDistribution:
                 Mf += M_add
                 j += 1 
         return Mf
+
+    def Mdj(self,a,c,k,j):
+        return poch(a,j)/poch(c,j) * j*k**(j-1) / factorial(j)
+
+    def Md(self,a,c,k):
+        j=0
+        Mf = self.Mdj(a,c,k,j)
+
+        while True:
+            M_add = self.Mdj(a,c,k,j+1)
+            
+            if (M_add)  / Mf < 1e-10:
+                print(f"M(a,c,j) Converged after j = {j} iterations")
+                break
+            else:
+                Mf += M_add
+                j += 1 
+        return Mf
     
     def c(self,p,k):
         return self.Gamma(p/2) / (2 * np.pi**(p/2) * self.M(1/2,p/2,k))
+
+    def g(self,a,c,k):
+        return self.Md(a,c,k)/self.M(a,c,k)
+
 #%%
 
-mu = np.array([1,0])
-k = 2
+mu = np.array([1,1])/np.sqrt(2)
+k = 15
 p = 2
 
 
@@ -103,3 +124,6 @@ x5=np.array([-2,-1])/np.sqrt(5)
 
 X=np.array([x1,x2,x3,x4,x5])
 
+
+print([WD.pdf(x,mu,k) for x in X])
+WD.log_likelihood(mu,k,X)

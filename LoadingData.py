@@ -28,6 +28,15 @@ for idx, x in enumerate(X_filtered):
 LEiDA_Signal = CoherenceMap(Theta)
 
 #%%
+
+import plotly.express as px
+
+
+fig = px.line(x=np.arange(len(Theta[0,:]),), y=Theta[0,:])
+fig.show()
+
+
+#%%
 import plotly.express as px
 
 

@@ -23,5 +23,5 @@ def CoherenceMap(Theta):
                 At[j,k]=np.cos(CurrentSample[j]-CurrentSample[k])
         
         LEiDA_Signal[:,t] = LeadingEigenVector(At)
-
+        
     return LEiDA_Signal
