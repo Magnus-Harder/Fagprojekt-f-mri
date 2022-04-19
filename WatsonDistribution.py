@@ -16,27 +16,6 @@ def rising_factorial(a,j):
         return 1
     else: 
         return (a+j-1)*rising_factorial(a,j-1)
-
-[rising_factorial(6,i) for i in range(6)]
-
-
-
-# M stoppes når den konvergere altså ændringen ved j+1 er tilpas lille.
-
-# Information kriteria AIC.
-# 
-
-# 7
-#%%
-import plotly.express as px
-
-y = [sum([poch(1/2,j)/poch(45,j) * 100**j / factorial(j) for j in range(js)]) for js in range(100)]
-x = [j for j in range(100)]
-
-
-px.line(x=x,y=y)
-
-#%%
 class WatsonDistribution:
     def __init__(self,p):
         self.p = p
@@ -44,7 +23,7 @@ class WatsonDistribution:
 
 
     def pdf(self,x,mu,kappa):
-        Wp = self.c(self.p,kappa) * np.exp(self.k * (mu.T @ x )**2)
+        Wp = self.c(self.p,kappa) * np.exp(kappa * (mu.T @ x )**2)
         return Wp
 
     def log_likelihood(self,mu,k,X):
@@ -73,7 +52,7 @@ class WatsonDistribution:
             M_add = self.Mj(a,c,k,j+1)
             
             if (M_add)  / Mf < 1e-10:
-                print(f"M(a,c,j) Converged after j = {j} iterations")
+                #print(f"M(a,c,j) Converged after j = {j} iterations")
                 break
             else:
                 Mf += M_add
@@ -91,7 +70,7 @@ class WatsonDistribution:
             M_add = self.Mdj(a,c,k,j+1)
             
             if (M_add)  / Mf < 1e-10:
-                print(f"M(a,c,j) Converged after j = {j} iterations")
+                #print(f"M(a,c,j) Converged after j = {j} iterations")
                 break
             else:
                 Mf += M_add
@@ -103,27 +82,3 @@ class WatsonDistribution:
 
     def g(self,a,c,k):
         return self.Md(a,c,k)/self.M(a,c,k)
-
-#%%
-
-mu = np.array([1,1])/np.sqrt(2)
-k = 15
-p = 2
-
-
-WD = WatsonDistribution(p,mu,k)
-
-
-
-x1=np.array([1,1])/np.sqrt(2)
-x2=np.array([-1,1])/np.sqrt(2)
-x3=np.array([1,-1])/np.sqrt(2)
-x4=np.array([-1,-1])/np.sqrt(2)
-
-x5=np.array([-2,-1])/np.sqrt(5)
-
-X=np.array([x1,x2,x3,x4,x5])
-
-
-print([WD.pdf(x,mu,k) for x in X])
-WD.log_likelihood(mu,k,X)
