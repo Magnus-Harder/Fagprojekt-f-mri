@@ -20,8 +20,6 @@ class WatsonDistribution:
     def __init__(self,p):
         self.p = p
 
-
-
     def pdf(self,x,mu,kappa):
         Wp = self.c(self.p,kappa) * np.exp(kappa * (mu.T @ x )**2)
         return Wp
@@ -41,44 +39,55 @@ class WatsonDistribution:
     def Gamma(self,n):
         return faculty(n-1)
 
-    def Mj(self,a,c,k,j):
-        return poch(a,j)/poch(c,j) * k**j / factorial(j)
-    
     def M(self,a,c,k):
-        j=0
-        Mf = self.Mj(a,c,k,j)
+        
+        M0 = 1
+        Madd = 1
 
-        while True:
-            M_add = self.Mj(a,c,k,j+1)
-            
-            if (M_add)  / Mf < 1e-10:
-                #print(f"M(a,c,j) Converged after j = {j} iterations")
+        for j in range(1,60):
+            Madd = Madd * (a+j-1)/(c+j-1) * k/j
+            M0 += Madd
+            if Madd < 1e-10:
                 break
-            else:
-                Mf += M_add
-                j += 1 
-        return Mf
+        return M0
 
-    def Mdj(self,a,c,k,j):
-        return poch(a,j)/poch(c,j) * j*k**(j-1) / factorial(j)
+    # def Mdj(self,a,c,k,j):
+    #     return poch(a,j)/poch(c,j) * j*k**(j-1) / factorial(j)
 
-    def Md(self,a,c,k):
-        j=0
-        Mf = self.Mdj(a,c,k,j)
+    # def Md(self,a,c,k):
+    #     j=0
+    #     Mf = self.Mdj(a,c,k,j)
 
-        while True:
-            M_add = self.Mdj(a,c,k,j+1)
+    #     while True:
+    #         M_add = self.Mdj(a,c,k,j+1)
             
-            if (M_add)  / Mf < 1e-10:
-                #print(f"M(a,c,j) Converged after j = {j} iterations")
-                break
-            else:
-                Mf += M_add
-                j += 1 
-        return Mf
+    #         if (M_add)  / Mf < 1e-10 or j > 60:
+    #             #print(f"Md(a,c,j) Converged after j = {j} iterations")
+    #             break
+    #         else:
+    #             Mf += M_add
+    #             j += 1 
+    #     return Mf
     
     def c(self,p,k):
         return self.Gamma(p/2) / (2 * np.pi**(p/2) * self.M(1/2,p/2,k))
 
-    def g(self,a,c,k):
-        return self.Md(a,c,k)/self.M(a,c,k)
+    # def g(self,a,c,k):
+    #     return self.Md(a,c,k)/self.M(a,c,k)
+
+#%%
+def M2(a,c,k):
+
+    M0 = 1
+    Madd = 1
+
+    for j in range(1,100000):
+        Madd = Madd * (a+j-1)/(c+j-1) * k/j
+        M0 += Madd
+        if Madd < 1e-10:
+            break
+    return M0
+
+MWD = WatsonDistribution(90)
+
+
