@@ -13,10 +13,12 @@ def matrix_vector_product(a,b):
             M[i,j] = a[i]*b[j]
     return M
 
-def EM_MWD(X,K,p, theta = 1e-6,maxiter=10**6):
+def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
+    
     MWD = WatsonDistribution(p)
     n = len(X[0])
-
+    a = 1/2
+    c = p/2
 
 
     #Initialize mu and kappa and Pi
@@ -31,7 +33,7 @@ def EM_MWD(X,K,p, theta = 1e-6,maxiter=10**6):
     
     
     # Estimating initial likelihood of data and hyperparameters
-    likelihood = sum([sum(np.log([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for i in range(K)])) for x in X.T])
+    likelihood = sum(np.log([sum([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for j in range(K)]) for x in X.T]))
 
 
 
@@ -49,9 +51,9 @@ def EM_MWD(X,K,p, theta = 1e-6,maxiter=10**6):
 
         # M step. Update Pis,Mus,kappas
         Pis = np.mean(B,axis=1)
+
         for j in range(K):
             S = np.zeros((90,90))
-
             for i in range(n):
                 #S +=  B[j,i] * (X[:,i] @ X[:,i].T)
                 S +=  B[j,i] * matrix_vector_product(X[:,i],X[:,i])
@@ -62,18 +64,45 @@ def EM_MWD(X,K,p, theta = 1e-6,maxiter=10**6):
             mus[:,j] = muj
 
             rj = muj.T @ S @ muj
+
+            # Estimating kappa from bounds
+            LB = (rj*c-a)/(rj*(1-rj)) * (1- (1-rj)/(c-a))
+            Bo = (rj*c-a)/(2*rj*(1-rj)) * (1+ np.sqrt(1+(4*(c+1)*rj*(1-rj))/(a*(c-a))))
+            UB = (rj*c-a)/(rj*(1-rj)) *(1 + rj/a) 
             
-            kappas[j] = 1/MWD.g(1/2,p/2,rj) # Inverse function or this?
+            if a/c < rj and rj < 1:
+                kappas[j] = (LB+Bo)/2
+                #kappas[j] = LB
+            elif 0 < rj  and rj < a/c:
+                kappas[j] = (UB+Bo)/2
+                #kappas[j] = Bo
+            elif rj == a/c:
+                kappas[j] = 0
+            else:
+                print("Nothing was found")
+            #kappas[j] = 1/MWD.g(1/2,p/2,rj) # Inverse function or this?
 
+        print(kappas)
 
-        # Estimating the likelihood of data for newly found hyperparameters in order to access convergence
-        # likelihood_iter = sum([sum(np.log([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for i in range(K)])) for x in X.T])
-        # if abs(likelihood - likelihood_iter) < theta:
-        #     break
-        # else:
-        #     likelihood = likelihood_iter
+        #Estimating the likelihood of data for newly found hyperparameters in order to access convergence
+        likelihood_iter = sum(np.log([sum([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for j in range(K)]) for x in X.T]))
+        if abs(likelihood - likelihood_iter) < theta or _ == maxiter-1:
+
+            # Assigning clusters if convergence
+            print(f"Algorithem converged after {_} iterations, Converged = {abs(likelihood - likelihood_iter) < theta}, Max iterations reached = {_ == maxiter}")
+            B = np.zeros((K,n))
+            for i in range(n):
+                Bi = np.array([Pis[j]*MWD.pdf(X[:,i],mus[:,j],kappas[j]) for j in range(K)])
+                for j in range(K):
+                    B[j,i] =   Bi[j]/np.sum(Bi)
+            Assignments = np.argmax(B,axis=0)
+            break
+        else:
+            likelihood = likelihood_iter
     
 
-    return Pis,kappas,mus
+    return Pis,kappas,mus,Assignments
 
 #%%
+
+
