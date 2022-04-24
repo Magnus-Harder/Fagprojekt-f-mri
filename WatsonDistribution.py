@@ -5,6 +5,14 @@ from scipy.special import poch
 import numpy as np
 
 @njit
+def matrix_vector_product(a,b):
+    M = np.zeros((90,90))
+    for i in range(90):
+        for j in range(90):
+            M[i,j] = a[i]*b[j]
+    return M
+
+@njit
 def faculty(x):
     if x==0: 
         return 1
@@ -32,8 +40,8 @@ class WatsonDistribution:
     
     def Scatter_matrix(self,X):
         S = np.zeros((self.p,self.p))
-        for x in X:
-            S += x@x.T
+        for x in X.T:
+            S += np.outer(x,x)
         return S
     
     def Gamma(self,n):
@@ -44,11 +52,7 @@ class WatsonDistribution:
         M0 = 1
         Madd = 1
 
-<<<<<<< HEAD
-        for j in range(1,100000):
-=======
         for j in range(1,60):
->>>>>>> 6648a4706554576bb455f1fc72f7b4d359b680a3
             Madd = Madd * (a+j-1)/(c+j-1) * k/j
             M0 += Madd
             if Madd < 1e-10:
