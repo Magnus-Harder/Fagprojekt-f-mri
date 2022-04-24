@@ -5,7 +5,7 @@ from numpy.linalg import eigh
 def LeadingEigenVector(At):
 
     EigenValues , EigenVectors = eigh(At)
-    LeV = EigenVectors[:,-1]
+    LeV = EigenVectors[:,np.argmax(EigenValues)]
 
     return LeV
 
@@ -14,9 +14,10 @@ def CoherenceMap(Theta):
     
     LEiDA_Signal = np.zeros((N,T))
 
-    At = np.zeros((N,N))
+    
 
     for t in range(T):
+        At = np.zeros((N,N))
         CurrentSample = Theta[:,t]
         for j in range(N):
             for k in range(N):

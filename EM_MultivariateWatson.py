@@ -5,14 +5,6 @@ from tqdm import tqdm
 import numpy as np
 from numba import njit
 
-@njit
-def matrix_vector_product(a,b):
-    M = np.zeros((90,90))
-    for i in range(90):
-        for j in range(90):
-            M[i,j] = a[i]*b[j]
-    return M
-
 def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
     
     MWD = WatsonDistribution(p)
@@ -24,13 +16,16 @@ def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
     #Initialize mu and kappa and Pi
     Pis = np.ones(K)/K
     kappas = np.ones(K)
-    mus = np.zeros((p,K))
+    # mus = np.zeros((p,K))
 
-    # Assuming K < p. we create mus as k different vector in standard basis E of R^p
+    # # Assuming K < p. we create mus as k different vector in standard basis E of R^p
+    # for j in range(K):
+    #     mus[j*int(p/K),j] = 1
+    
+    mus = np.random.rand(p,K)
     for j in range(K):
-        mus[j*int(p/K),j] = 1
-    
-    
+        mus[:,j] = mus[:,j]/np.sqrt(mus[:,j].T @ mus[:,j]) 
+        print(mus[:,j].T @ mus[:,j])
     
     # Estimating initial likelihood of data and hyperparameters
     likelihood = sum(np.log([sum([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for j in range(K)]) for x in X.T]))
@@ -56,7 +51,7 @@ def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
             S = np.zeros((90,90))
             for i in range(n):
                 #S +=  B[j,i] * (X[:,i] @ X[:,i].T)
-                S +=  B[j,i] * matrix_vector_product(X[:,i],X[:,i])
+                S +=  B[j,i] * np.outer(X[:,i],X[:,i])
             S *= 1/sum(B[j,:])
 
             muj = LeadingEigenVector(S)
