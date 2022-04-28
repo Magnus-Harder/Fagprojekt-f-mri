@@ -52,7 +52,7 @@ class WatsonDistribution:
         M0 = 1
         Madd = 1
 
-        for j in range(1,60):
+        for j in range(1,100000):
             Madd = Madd * (a+j-1)/(c+j-1) * k/j
             M0 += Madd
             if Madd < 1e-10:

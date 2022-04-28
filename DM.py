@@ -27,8 +27,9 @@ def DC(X, K, p,maxiter=1000):
         for k in range(K):
             Aj = np.zeros((p,p))
             for idx in Xj[k]:
-                Aj += np.outer(X[:,idx,X[:,idxk][idx])
-                mus[:,j] = Aj@mus[:,j] / (Aj @ mus[:,j])
+                Aj += np.outer(X[:,idx],X[:,idx])
+                a = Aj@mus[:,j]
+                mus[:,j] = a / np.sqrt( a.T @ a)
     
     Assigments = np.zeros(n)
     for i in range(n):
@@ -39,23 +40,23 @@ def DC(X, K, p,maxiter=1000):
     
 #%%
 
-import pickle
-with open('.Data_LEiDA_Representation.pickle','rb') as f:
-    X = pickle.load(f)
+# import pickle
+# with open('.Data_LEiDA_Representation.pickle','rb') as f:
+#     X = pickle.load(f)
 
 
-X_test = X[:,0:(330*20 +1)]
+# X_test = X[:,0:(330*20 +1)]
 
-mus,states = DC(X_test,K=7,p=90,maxiter=100)
+# mus,states = DC(X_test,K=7,p=90,maxiter=100)
 
-#%%
-for i in range(5):
-    fig = px.line(states[(5*i*330):(5*i*330+331)])
-    fig.show()
+# #%%
+# for i in range(5):
+#     fig = px.line(states[(5*i*330):(5*i*330+331)])
+#     fig.show()
 
-#%%
-for model in range(7):
-    print(f"Model {model}:")
-    fig = px.bar(mus[:,model])
-    fig.show()
-# %%
+# #%%
+# for model in range(7):
+#     print(f"Model {model}:")
+#     fig = px.bar(mus[:,model])
+#     fig.show()
+# # %%
