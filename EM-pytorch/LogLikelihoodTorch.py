@@ -2,6 +2,8 @@
 import torch
 import numpy as np
 import torch
+
+
 #%%
 #%%
 #torch.set_default_dtype(torch.float64)
@@ -29,10 +31,10 @@ def M_log(a,c,k):
 
     for j in range(1,100000):
         Madd = Madd * (a+j-1)/(c+j-1) * k/j
-        Madd_log = np.log(1+Madd/M0)
+        Madd_log = torch.log(1+Madd/M0)
         M0 += Madd
         M0_log += Madd_log
-        if Madd_log < 1e-10:
+        if all(Madd_log < 1e-10) :
             break
     return M0_log
 
@@ -49,12 +51,9 @@ def log_c(p,k,LogM=False):
 
 #@torch.jit.script
 def log_pdf(X,mu,kappa,p):
-        Wp = log_c(p,kappa) + kappa * (mu.T @ X )**2
+        Wp = log_c(p,kappa) + kappa * (mu.T @ X).T**2
         return Wp
 
-def log_pdf(x,mu,kappa,p):
-        Wp = log_c(p,kappa) + kappa * (mu.T @ x )**2
-        return Wp
 
 #@torch.jit.script
 def log_likelihood(X,pi,kappa,mu,p=90,K=7):
@@ -64,28 +63,12 @@ def log_likelihood(X,pi,kappa,mu,p=90,K=7):
     pi_con = Softmax(pi)
     kappa_con = Softplus(kappa)
     mu_con = torch.zeros((p,K))
-    for k in range(K):
-            mu_con[:,k] =  mu[:,k] / torch.sqrt(mu[:,k].T @ mu[:,k])
+    mu_con = mu /torch.diagonal(torch.sqrt(mu.T @ mu))
+         
+    inner = (torch.log(pi_con) + log_pdf(X,mu_con,kappa_con,p)).T
 
-        #
- #mu_con
-    outer = 0
-        
-    inner = torch.log(pi_con) + log_pdf(X,mu_con,kappa_con,p)
-
-    outer = (torch.log(torch.exp(inner-torch.max(inner,axis=1)).sum()) + torch.max(inner,axis=1)).sum()
-
-
-   
-    # Calculating Log_Likelihood
-    outer = 0
-    for idx,x in enumerate(X.T):
-        
-        inner = torch.log(pi_con) + log_pdf(x,mu_con,kappa_con,p)
-
-        outer += torch.log(torch.exp(inner-torch.max(inner)).sum()) + torch.max(inner)
-    
-    #likelihood = sum(torch.log(torch.tensor([sum([ pi[j]* pdf(x,mu[:,j],kappa[j],p) for j in range(K)]) for x in X.T])))
+    Max = torch.max(inner,axis=0).values
+    outer = (torch.log(torch.exp(inner-Max).sum()) + Max).sum()
 
     return outer
 
