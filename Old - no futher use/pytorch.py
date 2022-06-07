@@ -44,9 +44,6 @@ def Gamma(n):
 def c(p,k):
         return Gamma(p/2) / (2 * np.pi**(p/2) * M(1/2,p/2,k))
 
-def log_c(p,k):
-        return torch.lgamma(torch.tensor([p/2])) - torch.log(torch.tensor(2 * np.pi**(p/2))) - torch.log(M(1/2,p/2,k))
-
 def pdf(x,mu,kappa,p):
         Wp = c(p,kappa) * torch.exp(kappa * (mu.T @ x )**2)
         return Wp
@@ -84,7 +81,7 @@ def log_likelihood(X,pi,kappa,mu,p=90,K=7):
 
     return outer
 
-log_likelihood.code
+#log_likelihood.code
 #%%
 K = 7
 p = 90
@@ -103,7 +100,7 @@ mu.requires_grad = grad
 
 #%%
 learning_rate = 0.2
-n_iters = 100
+n_iters = 20
 epochs = 10
 
 #torch.autograd.set_detect_anomaly(False)
@@ -117,7 +114,7 @@ Optimzier = torch.optim.Adam(Parameters,lr=learning_rate)
 
 #%%
 for epoch in range(n_iters):
-    likelihood_output = -log_likelihood(X_tensor[:,0:(330*20+1)],pi,kappa,mu)
+    likelihood_output = -log_likelihood(X_tensor[:,0:(330*10+1)],pi,kappa,mu)
     likelihood_output.backward()
 
     # Using optimzer
