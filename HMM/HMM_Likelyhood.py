@@ -8,8 +8,14 @@ Softmax = torch.nn.Softmax(0)
 Softplus = torch.nn.Softplus()
 
 #%%
+def lsumMatrix(X):
+    Max = X.max(1).values
+    #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
+    return torch.log(torch.exp(X-Max).sum(1)) + Max
+
 def lsum(x):
-    return  x.max() + torch.log(torch.exp(x-x.max()).sum())
+    #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
+    return x.max() + torch.log(torch.exp(x-x.max()).sum())
 
 
 
@@ -80,21 +86,19 @@ def HMM_log_likelihood(X,pi,kappa,mu,Tk,p=90,K=7):
     # Skal der være pi?
     Emmision_Prop = (pi*log_pdf(X,mu,kappa,p)).T
     #Prop = torch.log(InitalState) + Emmision_Prop[:,0]
-    #rop_prev = Prop.clone()
+    #Prop_prev = Prop.clone()
     V = torch.zeros((K,330))
+
     
     V[:,0] = torch.log(InitalState) + Emmision_Prop[:,0]
-    #Vprev = V[:,0].clone()
-    #Vprob = torch.zeros((K,330))
-    #Vprob[:,0] = V[:,0]
+
     
     for n in range(1,330):
-        ProbHolder = torch.zeros((K))
         #V[:,n] = torch.log(Softmax(Tk  @ torch.exp(V[:,n-1]))) + Emmision_Prop[:,n]
-        for k in range(K):
-             ProbHolder[k] = lsum(V[:,n-1] + torch.log(Tk[:,k])) 
-        V[:,n] = Softmax(ProbHolder) + Emmision_Prop[k,n]
-        #Vprev= V[:,n].clone()
+        V[:,n] = lsumMatrix((V[:,n-1] + torch.log(Tk))) + Emmision_Prop[:,n]
+        #for k in range(K):
+        #     V[k,n] = lsum(V[:,n-1] + torch.log(Tk[:,k])) 
+
 
 
         #Prop_State_n = torch.log(Softmax(Tk @ torch.exp(Prop_prev))) + Emmision_Prop[:,n]
@@ -114,7 +118,7 @@ def Accumulated_HHM_LL(X,pi,kappa,mu,Tk,n,p=90,K=7):
     Subjectlog_Likelihood = torch.zeros(n)
     
     for subject in range(n):
-        Subjectlog_Likelihood[subject] = HMM_log_likelihood(X[:,330*subject:330*(subject+1)],pi_con,kappa_con,mu_con,Tk[subject],p,K)
+        Subjectlog_Likelihood[subject] = HMM_log_likelihood(X[:,330*subject:330*(subject+1)],pi_con,kappa_con,mu_con,Softmax(Tk[subject]),p,K)
     
     return lsum(Subjectlog_Likelihood)
 
