@@ -30,10 +30,9 @@ def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
     # for j in range(K):
     #     mus[j*int(p/K),j] = 1
     
-    mus = np.random.rand(p,K)
+    mus = np.zeros((p,K))
     for j in range(K):
-        mus[:,j] = mus[:,j]/np.sqrt(mus[:,j].T @ mus[:,j]) 
-        print(mus[:,j].T @ mus[:,j])
+        mus[j*int(p/K),j] = 1
     
     # Estimating initial likelihood of data and hyperparameters
     likelihood = sum(np.log([sum([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for j in range(K)]) for x in X.T]))
@@ -85,7 +84,6 @@ def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
                 print("Nothing was found")
             #kappas[j] = 1/MWD.g(1/2,p/2,rj) # Inverse function or this?
 
-        print(kappas)
 
         #Estimating the likelihood of data for newly found hyperparameters in order to access convergence
         likelihood_iter = sum(np.log([sum([ Pis[j]* MWD.pdf(x,mus[:,j],kappas[j]) for j in range(K)]) for x in X.T]))
@@ -104,7 +102,7 @@ def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
             likelihood = likelihood_iter
     
 
-    return Pis,kappas,mus,Assignments
+    return Pis,kappas,mus,Assignments,B
 
 #%%
 
