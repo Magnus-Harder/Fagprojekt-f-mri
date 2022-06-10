@@ -84,7 +84,7 @@ def HMM_log_likelihood(X,pi,kappa,mu,Tk,p=90,K=7):
     InitalState = torch.ones(K)/K
     
     # Skal der være pi?
-    Emmision_Prop = (pi*log_pdf(X,mu,kappa,p)).T
+    Emmision_Prop = torch.log(pi)+(log_pdf(X,mu,kappa,p)).T
     #Prop = torch.log(InitalState) + Emmision_Prop[:,0]
     #Prop_prev = Prop.clone()
     V = torch.zeros((K,330))
@@ -92,13 +92,12 @@ def HMM_log_likelihood(X,pi,kappa,mu,Tk,p=90,K=7):
     
     V[:,0] = torch.log(InitalState) + Emmision_Prop[:,0]
 
-    
+    Tlog = torch.log(Tk)
     for n in range(1,330):
-        #V[:,n] = torch.log(Softmax(Tk  @ torch.exp(V[:,n-1]))) + Emmision_Prop[:,n]
-        V[:,n] = lsumMatrix((V[:,n-1] + torch.log(Tk))) + Emmision_Prop[:,n]
+       
+        V[:,n] = lsumMatrix(V[:,n-1] + Tlog) + Emmision_Prop[:,n]        
         #for k in range(K):
-        #     V[k,n] = lsum(V[:,n-1] + torch.log(Tk[:,k])) 
-
+        #    V[k,n] = lsum(V[:,n-1] + torch.log(Tk.T[:,k])) + Emmision_Prop[k,n]  # Det her Forstår vi ikke!
 
 
         #Prop_State_n = torch.log(Softmax(Tk @ torch.exp(Prop_prev))) + Emmision_Prop[:,n]
