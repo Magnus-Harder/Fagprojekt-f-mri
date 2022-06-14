@@ -1,10 +1,9 @@
 #%%
-from numba import njit
 from math import factorial
 from scipy.special import poch
 import numpy as np
 
-@njit
+#@njit
 def matrix_vector_product(a,b):
     M = np.zeros((90,90))
     for i in range(90):
@@ -12,13 +11,13 @@ def matrix_vector_product(a,b):
             M[i,j] = a[i]*b[j]
     return M
 
-@njit
+#@njit
 def faculty(x):
     if x==0: 
         return 1
     else: 
         return x*faculty(x-1)
-@njit
+#@njit
 def rising_factorial(a,j):
     if j == 0: 
         return 1

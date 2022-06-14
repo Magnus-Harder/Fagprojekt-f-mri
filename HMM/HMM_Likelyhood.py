@@ -35,9 +35,9 @@ def InitializeParameters(n,p,K):
     kappa = torch.tensor([1. for _ in range(K)],requires_grad=grad)  
     mu.requires_grad = grad
     Tk = torch.ones((n,K,K),requires_grad=grad)
+    Pinit = torch.ones((K,n),requires_grad=grad)
 
-
-    return pi,kappa,mu,Tk
+    return kappa,mu,Tk,Pinit
 
 
 def M(a,c,k):
@@ -79,47 +79,39 @@ def log_pdf(X,mu,kappa,p):
         return Wp
 
 #@torch.jit.script
-def HMM_log_likelihood(X,pi,kappa,mu,Tk,p=90,K=7):
+def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p=90,K=7):
 
-    InitalState = torch.ones(K)/K
-    
-    # Skal der være pi?
-    Emmision_Prop = torch.log(pi)+(log_pdf(X,mu,kappa,p)).T
-    #Prop = torch.log(InitalState) + Emmision_Prop[:,0]
-    #Prop_prev = Prop.clone()
-    V = torch.zeros((K,330))
+    Tlog = torch.log(Tk)    
+    Emmision_Prop = log_pdf(X,mu,kappa,p).T
 
-    
-    V[:,0] = torch.log(InitalState) + Emmision_Prop[:,0]
-
-    Tlog = torch.log(Tk)
+    Prob = torch.log(Pinit) + Emmision_Prop[:,0]
     for n in range(1,330):
+        Prob = lsumMatrix(Prob.clone() + Tlog) + Emmision_Prop[:,n]
+    return lsum(Prob) 
+
+    # V = torch.zeros((K,330))
+    # V[:,0] = torch.log(InitalState) + Emmision_Prop[:,0]
+    # for n in range(1,330):
        
-        V[:,n] = lsumMatrix(V[:,n-1] + Tlog) + Emmision_Prop[:,n]        
-        #for k in range(K):
-        #    V[k,n] = lsum(V[:,n-1] + torch.log(Tk.T[:,k])) + Emmision_Prop[k,n]  # Det her Forstår vi ikke!
+    #     V[:,n] = lsumMatrix(V[:,n-1] + Tlog) + Emmision_Prop[:,n]        
+    #     #for k in range(K):
+    #         V[k,n] = lsum(V[:,n-1] + torch.log(Tk.T[:,k])) + Emmision_Prop[k,n]  # Det her Forstår vi ikke!
+    # return  lsum(V[:,329])
 
 
-        #Prop_State_n = torch.log(Softmax(Tk @ torch.exp(Prop_prev))) + Emmision_Prop[:,n]
-        #Prop += Prop_State_n
-        #Prop_prev = Prop.clone()
-
-
-    return  lsum(V[:,329])
-
-def Accumulated_HHM_LL(X,pi,kappa,mu,Tk,n,p=90,K=7):
+def Accumulated_HHM_LL(X,Pinit,kappa,mu,Tk,n,p=90,K=7):
 
     # Constraining Parameters:
-    pi_con = Softmax(pi)
     kappa_con = Softplus(kappa)
     mu_con = mu /torch.sqrt((mu * mu).sum(axis=0))
 
     Subjectlog_Likelihood = torch.zeros(n)
     
-    for subject in range(n):
-        Subjectlog_Likelihood[subject] = HMM_log_likelihood(X[:,330*subject:330*(subject+1)],pi_con,kappa_con,mu_con,Softmax(Tk[subject]),p,K)
     
-    return lsum(Subjectlog_Likelihood)
+    for subject in range(n):
+        Subjectlog_Likelihood[subject] = HMM_log_likelihood(X[:,330*subject:330*(subject+1)],Softmax(Pinit[:,subject]),kappa_con,mu_con,Softmax(Tk[subject]),p,K)
+    
+    return Subjectlog_Likelihood.sum()
 
 
 
@@ -129,6 +121,11 @@ def Optimizationloop(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
         Error_prev = 0
         for epoch in range(n_iters):
                 Error = -lose(X,*Parameters,n,p,K=K)
+
+                if torch.isnan(Error):
+                    print("Optimizationloop has Converged")
+                    break
+
                 Error.backward()
 
                 # Using optimzer

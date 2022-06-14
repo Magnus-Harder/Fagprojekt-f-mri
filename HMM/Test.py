@@ -23,3 +23,9 @@ print(sum(Optimized@p3))
 print(sum(Optimized@p4))
 print(sum(Optimized@p5))
 lsum(T+p)
+
+#%%
+
+device = torch.device('mps')
+p.to(device)
+# %%
