@@ -1,25 +1,23 @@
+#%%
 import torch
 import numpy as np
 import torch
 
-#%%
-#torch.set_default_dtype(torch.float64)
 Softmax = torch.nn.Softmax(0)
+Softmax2 = torch.nn.Softmax(1)
 Softplus = torch.nn.Softplus()
 
-#%%
+@torch.jit.script
 def lsumMatrix(X):
     Max = X.max(1).values
     #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
-    return torch.log(torch.exp(X-Max).sum(1)) + Max
+    return torch.log(torch.exp((X.T-Max).T).sum(1)) + Max
 
+@torch.jit.script
 def lsum(x):
     #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
     return x.max() + torch.log(torch.exp(x-x.max()).sum())
 
-
-
-#%%
 
 def InitializeParameters(n,p,K):
     mu = torch.zeros((p,K))
@@ -40,19 +38,8 @@ def InitializeParameters(n,p,K):
     return kappa,mu,Tk,Pinit
 
 
-def M(a,c,k):
-
-    M0 = torch.ones(len(k))
-    Madd = torch.ones(len(k))
-
-    for j in range(1,10000):
-        Madd = Madd * (a+j-1)/(c+j-1) * k/j
-        M0 += Madd
-        if all(Madd < 1e-10):
-            break
-    return M0
-
-def M_log(a,c,k):
+@torch.jit.script
+def M_log(a : float ,c : float,k):
     
     M0 = torch.ones(len(k))
     Madd = torch.ones(len(k))
@@ -68,18 +55,18 @@ def M_log(a,c,k):
             break
     return M0_log
 
-#@torch.jit.script
-def log_c(p,kappa):
-        return torch.lgamma(torch.tensor([p/2])) - torch.log(torch.tensor(2 * np.pi**(p/2))) - M_log(1/2,p/2,kappa) #torch.log(M(1/2,p/2,kappa)) M_log(1/2,p/2,kappa) 
-        #return torch.lgamma(torch.tensor([p/2])) - torch.log(torch.tensor(2 * np.pi**(p/2))) - torch.log(M(1/2,p/2,k))
+@torch.jit.script
+def log_c(p: int,kappa):
+        #return torch.lgamma(torch.tensor([p/2])) - torch.log(torch.tensor(2 * np.pi**(p/2))) - M_log(torch.tensor([1/2]),p/2,kappa) 
+        return torch.lgamma(p/2) - torch.log(torch.tensor(2 * np.pi**(p/2))) - M_log(1/2,p/2,kappa) 
 
-#@torch.jit.script
-def log_pdf(X,mu,kappa,p):
+@torch.jit.script
+def log_pdf(X,mu,kappa,p : int):
         Wp = log_c(p,kappa) + kappa * (mu.T @ X).T**2
         return Wp
 
-#@torch.jit.script
-def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p=90,K=7):
+@torch.jit.script
+def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p : int ,K : int):
 
     Tlog = torch.log(Tk)    
     Emmision_Prop = log_pdf(X,mu,kappa,p).T
@@ -87,32 +74,53 @@ def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p=90,K=7):
     Prob = torch.log(Pinit) + Emmision_Prop[:,0]
     for n in range(1,330):
         Prob = lsumMatrix(Prob.clone() + Tlog) + Emmision_Prop[:,n]
+        
     return lsum(Prob) 
 
-    # V = torch.zeros((K,330))
-    # V[:,0] = torch.log(InitalState) + Emmision_Prop[:,0]
-    # for n in range(1,330):
-       
-    #     V[:,n] = lsumMatrix(V[:,n-1] + Tlog) + Emmision_Prop[:,n]        
-    #     #for k in range(K):
-    #         V[k,n] = lsum(V[:,n-1] + torch.log(Tk.T[:,k])) + Emmision_Prop[k,n]  # Det her Forstår vi ikke!
-    # return  lsum(V[:,329])
-
-
-def Accumulated_HHM_LL(X,Pinit,kappa,mu,Tk,n,p=90,K=7):
+@torch.jit.script
+def Accumulated_HHM_LL(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
 
     # Constraining Parameters:
-    kappa_con = Softplus(kappa)
-    mu_con = mu /torch.sqrt((mu * mu).sum(axis=0))
+    kappa_con = torch.minimum(Softplus(kappa),torch.tensor([800]))
+    mu_con = mu /torch.sqrt((mu**2).sum(0))
 
     Subjectlog_Likelihood = torch.zeros(n)
     
     
-    for subject in range(n):
+    for subject in range(int(n)):
         Subjectlog_Likelihood[subject] = HMM_log_likelihood(X[:,330*subject:330*(subject+1)],Softmax(Pinit[:,subject]),kappa_con,mu_con,Softmax(Tk[subject]),p,K)
     
     return Subjectlog_Likelihood.sum()
 
+
+@torch.jit.script
+def HMM_log_likelihoodHalf(X,Pinit,kappa,mu,Tk,p : int ,K : int):
+
+    Tlog = torch.log(Tk)    
+    Emmision_Prop = log_pdf(X,mu,kappa,p).T
+
+    Prob = torch.log(Pinit) + Emmision_Prop[:,0]
+    for n in range(1,165):
+        Prob = lsumMatrix(Prob.clone() + Tlog) + Emmision_Prop[:,n]
+        
+    return lsum(Prob) 
+
+
+
+@torch.jit.script
+def Accumulated_HHM_LLHalf(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
+
+    # Constraining Parameters:
+    kappa_con = torch.minimum(Softplus(kappa),torch.tensor([800]))
+    mu_con = mu /torch.sqrt((mu**2).sum(0))
+
+    Subjectlog_Likelihood = torch.zeros(n)
+    
+    
+    for subject in range(int(n)):
+        Subjectlog_Likelihood[subject] = HMM_log_likelihoodHalf(X[:,165*subject:165*(subject+1)],Softmax(Pinit[:,subject]),kappa_con,mu_con,Softmax(Tk[subject]),p,K)
+    
+    return Subjectlog_Likelihood.sum()
 
 
 
@@ -139,3 +147,29 @@ def Optimizationloop(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
                 if epoch % 1 == 0:
                         print(f"epoch {epoch+1}; Log-Likelihood = {Error}")
         return Parameters
+
+def OptimizationTraj(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
+        Trajectory = np.zeros(n_iters)
+        for epoch in range(n_iters):
+                Error = -lose(X,*Parameters,n,p,K=K)
+
+                if torch.isnan(Error):
+                    print("Optimizationloop has Converged")
+                    break
+
+                Error.backward()
+
+                # Using optimzer
+                Optimizer.step()
+                Optimizer.zero_grad()
+
+                #if abs(Error)-abs(Error_prev) < 1e-2:
+                #    break
+
+                #Error_prev = Error
+                if epoch % 100 == 0 or epoch == n_iters-1:
+                        print(f"epoch {epoch+1}; Log-Likelihood = {Error}")
+                Trajectory[epoch] = Error
+        return Trajectory
+
+print(Accumulated_HHM_LL.code)

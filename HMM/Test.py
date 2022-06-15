@@ -25,7 +25,21 @@ print(sum(Optimized@p5))
 lsum(T+p)
 
 #%%
+import torch
 
-device = torch.device('mps')
-p.to(device)
+@torch.jit.script
+def foo(x, y):
+    if x.max() > y.max():
+        r = x
+    else:
+        r = y
+    return r
+
+print(type(foo))  # torch.jit.ScriptFunction
+
+# See the compiled graph as Python code
+print(foo.code)
+
+# Call the function using the TorchScript interpreter
+foo(torch.ones(2, 2), torch.ones(2, 2))
 # %%
