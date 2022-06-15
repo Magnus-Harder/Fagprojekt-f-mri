@@ -37,6 +37,24 @@ def InitializeParameters(n,p,K):
 
     return kappa,mu,Tk,Pinit
 
+def InitializeParametersFF(X_tensor,n,p,K):
+    mu = torch.zeros(p,K)
+    observations = X_tensor.shape[1]
+    mu[:,0] = X_tensor[:,np.random.randint(observations)]
+    for new in range(1,K):
+        mu[:,new]=X_tensor[:,np.argmin((((X_tensor.T @ mu)[:,0:new])**2).max(1).values)]
+
+    # Intialize pi,mu and kappa
+    grad = True
+    pi = torch.tensor([1/K for _ in range(K)],requires_grad=grad)
+    kappa = torch.tensor([1. for _ in range(K)],requires_grad=grad)  
+    mu.requires_grad = grad
+    Tk = torch.ones((n,K,K),requires_grad=grad)
+    Pinit = torch.ones((K,n),requires_grad=grad)
+
+    return kappa,mu,Tk,Pinit
+
+
 
 @torch.jit.script
 def M_log(a : float ,c : float,k):
