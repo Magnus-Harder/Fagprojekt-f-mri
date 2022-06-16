@@ -103,13 +103,12 @@ def OptimizationTraj(X,Parameters,lose,Optimizer,n_iters : int,K =7):
         return Trajectory
 
 
-def Initialize(p,K):
-        mu = torch.zeros((p,K))
-        for j in range(K):
-                val = 1 if j % 2 == 0 else -1
-                mu[(j*int(p/K)),j] = val
-                #mus[:,j] = mus[:,j]/np.sqrt(mus[:,j].T @ mus[:,j]) 
-        #print(mus[:,j].T @ mus[:,j])
+def InitializeFF(X_tensor,p,K):
+        mu = torch.zeros(p,K)
+        observations = X_tensor.shape[1]
+        mu[:,0] = X_tensor[:,np.random.randint(observations)]
+        for new in range(1,K):
+            mu[:,new]=X_tensor[:,np.argmin((((X_tensor.T @ mu)[:,0:new])**2).max(1).values)]
 
         # Intialize pi,mu and kappa
         grad = True
@@ -118,3 +117,20 @@ def Initialize(p,K):
         mu.requires_grad = grad
 
         return pi,kappa,mu
+
+def InitializeParametersFF(X_tensor,n,p,K):
+    mu = torch.zeros(p,K)
+    observations = X_tensor.shape[1]
+    mu[:,0] = X_tensor[:,np.random.randint(observations)]
+    for new in range(1,K):
+        mu[:,new]=X_tensor[:,np.argmin((((X_tensor.T @ mu)[:,0:new])**2).max(1).values)]
+
+    # Intialize pi,mu and kappa
+    grad = True
+    pi = torch.tensor([1/K for _ in range(K)],requires_grad=grad)
+    kappa = torch.tensor([1. for _ in range(K)],requires_grad=grad)  
+    mu.requires_grad = grad
+    Tk = torch.ones((n,K,K),requires_grad=grad)
+    Pinit = torch.ones((K,n),requires_grad=grad)
+
+    return kappa,mu,Tk,Pinit
