@@ -1,0 +1,46 @@
+eb9b078 - Magnus-Harder, 8 minutes ago : Final Comments on code for hand in
+3632a17 - Magnus-Harder, 5 hours ago : All final Files - still needs commenting
+4cb1d88 - Magnus-Harder, 5 hours ago : GMM
+2d9fce8 - FrederikkeUldahl, 8 hours ago : Plots for data processing
+bdfe186 - FrederikkeUldahl, 10 hours ago : General Linar Model
+ec50aaa - Magnus-Harder, 3 days ago : Final run of number of status included in Hidden Markov Model
+a119dc5 - Magnus-Harder, 4 days ago : Fathest First Cosine Sim
+22a00f6 - Magnus-Harder, 4 days ago : HMM evaluation of K-clusters
+f2ba902 - Magnus-Harder, 5 days ago : HMM Torch implmentation Working
+84443bf - Magnus-Harder, 9 days ago :  pi fix line 87
+35aa7fb - Magnus-Harder, 10 days ago : lsum Matrix
+0b21d59 - Magnus-Harder, 10 days ago :  Torch Likelihood Optimazation Mixturemodel - Finalized
+6b3cd63 - Magnus-Harder, 12 days ago : Added Event Overview
+ee9d47c - Magnus-Harder, 12 days ago : 7/06
+0631f0c - Magnus-Harder, 2 weeks ago : Mutiple Changes Start 3 weeK: 1. Bug fix phase extraction 2. Optimzer for torch Environment 3. Final Em K= 7 Data
+fc8eb43 - Magnus-Harder, 6 weeks ago :  Restructuring folder -  still in procces
+d1c880a - Danyushen, 7 weeks ago : EM on new data set
+41d3930 - Danyushen, 7 weeks ago : Data Proccessing on new data set*
+e499515 - Danyushen, 7 weeks ago : Leida and EM on the new data set
+9638a9d - Magnus-Harder, 7 weeks ago : Inital Pytorch optimization design
+e26a9fc - Magnus-Harder, 8 weeks ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri
+5b0eb30 - Magnus-Harder, 8 weeks ago : Prossed fix for data proccesing
+ff21210 - Danyushen, 8 weeks ago : Co-authored-by: Magnus-Harder <Magnus-Harder@users.noreply.github.com>
+224b943 - Magnus-Harder, 8 weeks ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri
+625d291 - Magnus-Harder, 8 weeks ago : Data File Updated
+5283baa - Magnus-Harder, 8 weeks ago : Data File Updated
+c3c0870 - Magnus-Harder, 8 weeks ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri
+052c4a5 - Magnus-Harder, 9 weeks ago : Bug fixes for Kummer function in EM algortihem (Still not working porperly
+6648a47 - Magnus-Harder, 9 weeks ago : Bug fixes for Kummer function in EM algortihem (Still not working porperly
+95feede - Magnus-Harder, 9 weeks ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri
+5552986 - Magnus-Harder, 9 weeks ago :  Intial Testing of EM algortihem
+209e305 - FrederikkeUldahl, 9 weeks ago : Updated version of plots of data
+84c21a5 - FrederikkeUldahl, 9 weeks ago : Plots of data
+87dcc0a - Magnus-Harder, 2 months ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri Branch merge
+aa933d5 - Magnus-Harder, 2 months ago : Bug fix on ".DS_Store"
+f3e3a98 - Magnus-Harder, 2 months ago : Delete .DS_Store
+b6e7a5e - Magnus-Harder, 2 months ago : Draft EM-Watson, Fix on .gitignore
+c34197e - Magnus-Harder, 3 months ago : 1.1 Watson Dist
+a9b8c23 - Magnus-Harder, 3 months ago : Merge branch 'main' of github.com:Magnus-Harder/Fagprojekt-f-mri
+0e972dd - Magnus-Harder, 3 months ago : 1.0 Implementationn Of Watson distribution Class
+5490df0 - FrederikkeUldahl, 3 months ago : ...
+278d0cf - Magnus-Harder, 4 months ago : filtfilt
+c15d00d - Magnus-Harder, 4 months ago : Fourier Transformation
+4702213 - Magnus-Harder, 4 months ago : Loading Data file
+102b8ab - Magnus-Harder, 4 months ago : Upload of data.
+6e8eda7 - Magnus-Harder, 4 months ago : Initial commit
