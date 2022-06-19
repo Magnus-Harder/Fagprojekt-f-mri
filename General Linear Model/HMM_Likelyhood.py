@@ -162,7 +162,7 @@ def Optimizationloop(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
                 #    break
 
                 #Error_prev = Error
-                if epoch % 1 == 0:
+                if epoch % 100 == 0:
                         print(f"epoch {epoch+1}; Log-Likelihood = {Error}")
         return Parameters
 
