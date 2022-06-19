@@ -4,28 +4,25 @@ import numpy as np
 import torch
 
 Softmax = torch.nn.Softmax(0)
-Softmax2 = torch.nn.Softmax(1)
 Softplus = torch.nn.Softplus()
 
+# Logarithmic stable sum for a matrix over rows
 @torch.jit.script
 def lsumMatrix(X):
     Max = X.max(1).values
-    #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
     return torch.log(torch.exp((X.T-Max).T).sum(1)) + Max
 
+# Logarithmic stable sum 
 @torch.jit.script
 def lsum(x):
-    #return  Maxes + torch.log(torch.exp(x-Maxes).sum())
     return x.max() + torch.log(torch.exp(x-x.max()).sum())
 
-
+# Initilize parameters of Hidden Markov Model
 def InitializeParameters(n,p,K):
     mu = torch.zeros((p,K))
     for j in range(K):
             val = 1 if j % 2 == 0 else -1
             mu[(j*int(p/K)),j] = val
-            #mus[:,j] = mus[:,j]/np.sqrt(mus[:,j].T @ mus[:,j]) 
-    #print(mus[:,j].T @ mus[:,j])
 
     # Intialize pi,mu and kappa
     grad = True
@@ -37,6 +34,7 @@ def InitializeParameters(n,p,K):
 
     return kappa,mu,Tk,Pinit
 
+# Initilize parameters of Hidden Markov Model user farthest first
 def InitializeParametersFF(X_tensor,n,p,K):
     mu = torch.zeros(p,K)
     observations = X_tensor.shape[1]
@@ -56,6 +54,7 @@ def InitializeParametersFF(X_tensor,n,p,K):
 
 
 
+# Log - kummers function
 @torch.jit.script
 def M_log(a : float ,c : float,k):
     
@@ -73,16 +72,18 @@ def M_log(a : float ,c : float,k):
             break
     return M0_log
 
+# pdf normalizer on log-scale
 @torch.jit.script
 def log_c(p: int,kappa):
-        #return torch.lgamma(torch.tensor([p/2])) - torch.log(torch.tensor(2 * np.pi**(p/2))) - M_log(torch.tensor([1/2]),p/2,kappa) 
         return torch.lgamma(p/2) - torch.log(torch.tensor(2 * np.pi**(p/2))) - M_log(1/2,p/2,kappa) 
 
+# log-pdf watson distribution
 @torch.jit.script
 def log_pdf(X,mu,kappa,p : int):
         Wp = log_c(p,kappa) + kappa * (mu.T @ X).T**2
         return Wp
 
+# Likelihood of trajectory of one subject given parameters
 @torch.jit.script
 def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p : int ,K : int):
 
@@ -95,6 +96,7 @@ def HMM_log_likelihood(X,Pinit,kappa,mu,Tk,p : int ,K : int):
         
     return lsum(Prob) 
 
+# Sum over likelihood for each subject
 @torch.jit.script
 def Accumulated_HHM_LL(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
 
@@ -111,6 +113,7 @@ def Accumulated_HHM_LL(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
     return Subjectlog_Likelihood.sum()
 
 
+# Caluclate log-likelihood of half a subject given parameters
 @torch.jit.script
 def HMM_log_likelihoodHalf(X,Pinit,kappa,mu,Tk,p : int ,K : int):
 
@@ -125,6 +128,7 @@ def HMM_log_likelihoodHalf(X,Pinit,kappa,mu,Tk,p : int ,K : int):
 
 
 
+# Accumulate likelihood of each subject given parameters
 @torch.jit.script
 def Accumulated_HHM_LLHalf(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
 
@@ -142,7 +146,7 @@ def Accumulated_HHM_LLHalf(X,Pinit,kappa,mu,Tk,n : int,p : int,K : int):
 
 
 
-
+# Optimize inputparameters
 def Optimizationloop(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
         Error_prev = 0
         for epoch in range(n_iters):
@@ -166,6 +170,7 @@ def Optimizationloop(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
                         print(f"epoch {epoch+1}; Log-Likelihood = {Error}")
         return Parameters
 
+# Optimize inputparameters and return trajectory of log likelihoods
 def OptimizationTraj(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
         Trajectory = np.zeros(n_iters)
         for epoch in range(n_iters):
@@ -190,4 +195,3 @@ def OptimizationTraj(X,Parameters,lose,Optimizer,n,n_iters : int,p=90,K =7):
                 Trajectory[epoch] = Error
         return Trajectory
 
-print(Accumulated_HHM_LL.code)

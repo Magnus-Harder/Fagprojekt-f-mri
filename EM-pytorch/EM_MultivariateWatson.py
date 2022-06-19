@@ -5,6 +5,7 @@ from tqdm import tqdm
 import numpy as np
 from numba import njit
 
+# Function Returning leading Eigen Vector of an NxN matrix
 def LeadingEigenVector(At):
 
     EigenValues , EigenVectors = eigh(At)
@@ -12,7 +13,7 @@ def LeadingEigenVector(At):
 
     return LeV
 
-
+# Function EM-algortihem for Watson Mixture Model 
 def EM_MWD(X: any,K: int,p :int, theta = 1e-2,maxiter=1000):
     
     MWD = WatsonDistribution(p)
